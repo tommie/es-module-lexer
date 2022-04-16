@@ -428,6 +428,7 @@ void tryParseExportStatement () {
 
       case 'c':
         if (memcmp(pos + 1, &LASS[0], 4 * 2) == 0 && isBrOrWsOrPunctuatorNotDot(*(pos + 5))) {
+          facade = false;
           pos += 5;
           ch = commentWhitespace(true);
           const char16_t* startPos = pos;
@@ -442,6 +443,7 @@ void tryParseExportStatement () {
       // export var/let/const name = ...(, name = ...)+
       case 'v':
       case 'l':
+        facade = false;
         // destructured initializations not currently supported (skipped for { or [)
         // also, lexing names after variable equals is skipped (export var p = function () { ... }, q = 5 skips "q")
         pos += 2;
@@ -452,16 +454,14 @@ void tryParseExportStatement () {
           ch = readToWsOrPunctuator(ch);
           // dont yet handle [ { destructurings
           if (ch == '{' || ch == '[') {
-            pos--;
-            return;
+            break;
           }
           if (pos == startPos)
             return;
           addExport(startPos, pos);
           ch = commentWhitespace(true);
           if (ch == '=') {
-            pos--;
-            return;
+            break;
           }
         } while (ch == ',');
         pos--;
